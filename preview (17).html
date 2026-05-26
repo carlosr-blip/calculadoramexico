@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora</title>
+<style>
+  :root{
+    --keo-green:#42c98a;
+    --keo-teal:#2d7a81;
+    --keo-blue:#2d5774;
+    --keo-ink:#193242;
+    --keo-bg:#eef5f4;
+    --panel:#ffffff;
+    --line:#c9d7dd;
+    --line-strong:#87a4b0;
+    --soft:#f6fbfb;
+    --shadow:0 12px 30px rgba(25,50,66,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:var(--keo-ink);background:linear-gradient(180deg,#eef3f4 0%,#f7f9fa 100%)}
+  .topbar{
+    max-width:1760px;margin:0 auto;padding:8px 24px 0;display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  }
+  .btn, .badge{
+    background:#fff;border:1px solid var(--line-strong);padding:14px 18px;font-size:16px;line-height:1.15;
+    box-shadow:0 2px 0 rgba(0,0,0,.03);text-decoration:none;color:var(--keo-ink);
+  }
+  .btn{cursor:pointer;transition:.18s ease}
+  .btn:hover{background:var(--soft);border-color:var(--keo-teal)}
+  .badge{padding:10px 14px;font-size:15px;color:var(--keo-blue);background:linear-gradient(180deg,#fbfefe 0%,#f1f7f8 100%)}
+  .shell{max-width:1760px;margin:0 auto;padding:18px 24px 28px}
+  .two-col{display:grid;grid-template-columns:1fr 1.85fr;gap:24px;align-items:start}
+  .panel{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow)}
+  .panel-header{padding:16px 18px 14px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(66,201,138,.08),rgba(45,87,116,.06));}
+  .panel-header h2{margin:0;font-size:24px;color:#0c2738}
+  .panel-body{padding:16px 18px 18px}
+  .muted{font-size:17px;color:#466170;line-height:1.45;margin:0}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin-top:12px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field.full{grid-column:1/-1}
+  .field label{font-size:15px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#102d40}
+  .field input,.field select,.field textarea{
+    width:100%;border:1px solid var(--line-strong);background:#fff;padding:12px 12px;font-size:17px;color:var(--keo-ink);
+    min-height:47px;outline:none;
+  }
+  .field textarea{min-height:82px;resize:vertical}
+  .hint{font-size:15px;color:#506c78;line-height:1.45;margin:10px 0 0}
+  .formula-card{border:1px solid var(--line);background:linear-gradient(180deg,#fcfefe 0%,#f7fbfb 100%);padding:18px 22px;margin-top:18px}
+  .formula-card h3{margin:0 0 10px;font-size:18px;color:#0f2e43}
+  .formula{font-family:Georgia,"Times New Roman",serif;font-size:28px;color:#122a3d;margin:0 0 14px}
+  .logic-list{margin:16px 0 0;padding-left:0;list-style:none}
+  .logic-list li{margin:6px 0;font-size:16px;color:#3e5763;line-height:1.45}
+  .conditions-wrap{margin-top:22px;display:flex;flex-direction:column;gap:18px}
+  .condition-card{background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .condition-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(45,87,116,.06),rgba(66,201,138,.08));}
+  .condition-head h3{margin:0;font-size:20px}
+  .head-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .small-btn{background:#fff;border:1px solid var(--line-strong);padding:10px 14px;font-size:15px;cursor:pointer;color:#173246}
+  .small-btn:hover{background:var(--soft)}
+  .danger{border-color:#b48f8f;color:#8a3838}
+  .condition-body{padding:14px 18px 18px}
+  .condition-grid{display:grid;grid-template-columns:1.05fr 1.05fr 1fr 1fr;gap:12px 14px}
+  .tramos{margin-top:16px}
+  .tramo-table{width:100%;border-collapse:collapse;table-layout:fixed}
+  .tramo-table th,.tramo-table td{border:1px solid var(--line);padding:10px 10px;vertical-align:middle}
+  .tramo-table th{background:#f4f9fa;font-size:14px;text-transform:uppercase;letter-spacing:.03em;color:#15374e;text-align:left}
+  .tramo-table td input,.tramo-table td select{width:100%;border:1px solid #adc0c9;padding:9px 8px;font-size:15px;min-height:40px}
+  .tramo-table td.action-cell{width:72px;text-align:center}
+  .ghost{background:#fff;border:1px dashed var(--line-strong);color:var(--keo-blue)}
+  .calc-summary{margin-top:16px;padding:14px 16px;border:1px solid var(--line);background:#fbfefe}
+  .calc-summary h4{margin:0 0 8px;font-size:16px;color:#18374b}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:8px 11px;border:1px solid #b9cbd2;background:#fff;color:#27485d;font-size:14px}
+  .preview-wrap{margin-top:26px}
+  .preview-title{font-size:18px;font-weight:700;color:#123246;margin:0 0 12px 2px}
+  .doc-sheet{
+    width:210mm;min-height:297mm;background:#fff;margin:0 auto 16px;padding:18mm 16mm 16mm;
+    border:1px solid #d7dee2;box-shadow:0 8px 22px rgba(0,0,0,.06);position:relative;
+    font-family:"Times New Roman", Georgia, serif;color:#111;
+  }
+  .doc-sheet::before{display:none}
+  .doc-title{
+    font-family:"Times New Roman", Georgia, serif;font-size:26px;font-weight:700;color:var(--keo-blue);
+    margin:0 0 14px;line-height:1.15;
+  }
+  .contract-lines p{margin:0 0 8px;font-size:12.8pt;line-height:1.45}
+  .contract-lines .label{font-weight:700}
+  .cond-block{margin-top:16px;padding-top:6px}
+  .cond-name{
+    font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:700;color:#111;margin:0 0 10px;
+  }
+  .contract-main-table,.classic-info-strip{
+    width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px;
+  }
+  .contract-main-table th,.contract-main-table td,
+  .classic-info-strip td{
+    border:1px solid #6a808f;padding:8px 9px;vertical-align:top;
+  }
+  .contract-main-table th{
+    background:#edf4f6;color:#173246;font-family:Arial,Helvetica,sans-serif;
+    font-size:11.2pt;text-transform:uppercase;letter-spacing:.02em;text-align:left;
+  }
+  .contract-main-table td{font-size:11.3pt;line-height:1.25}
+  .contract-main-table .cat-cell{font-style:italic}
+  .contract-main-table .amount-cell,
+  .contract-main-table .pay-cell{font-style:normal}
+  .cat-list{margin:0;padding-left:16px}
+  .cat-list li{margin:0 0 8px 0;line-height:1.3}
+  .legend{font-size:10.9pt;line-height:1.3;color:#111;margin:10px 0 0;font-style:normal}
+  .doc-note{font-size:11pt;line-height:1.35;color:#111;margin:8px 0}
+  .classic-info-strip{margin-top:0}
+  .classic-info-strip td{font-size:11pt;line-height:1.3}
+  .classic-info-strip strong{font-family:Arial,Helvetica,sans-serif}
+  .footer-line{display:none}
+  .spacer-8{height:8px}
+  @page{size:A4;margin:12mm}
+  @media print{
+    body{background:#fff}
+    .topbar,.shell>.two-col,.conditions-wrap>.condition-card,.preview-title{display:none !important}
+    .shell{padding:0;max-width:none}
+    .preview-wrap{margin:0}
+    .doc-sheet{box-shadow:none;border:none;margin:0 auto 0;padding:14mm 12mm 12mm;page-break-after:always}
+    .doc-sheet:last-child{page-break-after:auto}
+  }
+  @media (max-width:1200px){
+    .two-col{grid-template-columns:1fr}
+    .condition-grid{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:760px){
+    .meta-grid,.condition-grid{grid-template-columns:1fr}
+    .topbar{padding:10px 14px 0}
+    .shell{padding:16px 14px 26px}
+    .doc-sheet{width:auto;min-height:auto;padding:14mm 10mm}
+  }
+</style>
+</head>
+<body>
+  <div class="topbar no-print">
+    <button class="btn" id="refreshBtn">Actualizar vista contractual</button>
+    <button class="btn" id="printBtn">Guardar / Enviar como PDF</button>
+    <button class="btn" id="wordBtn">Generar Word</button>
+    <div class="badge">Base CAT: 360 días</div>
+    <div class="badge">CAT sin IVA</div>
+  </div>
+
+  <div class="shell">
+    <div class="two-col no-print">
+      <section class="panel">
+        <div class="panel-header"><h2>Datos generales del contrato</h2></div>
+        <div class="panel-body">
+          <p class="muted">Esta plantilla local pide los datos base del encabezado y genera el CAT automáticamente con la fórmula contractual: costo acumulado sin IVA × 360 / días al pago.</p>
+          <div class="meta-grid">
+            <div class="field">
+              <label>Tipo de contrato</label>
+              <select id="contractType">
+                <option value="Contrato Pesos">Contrato Pesos</option>
+                <option value="Contrato Dólares">Contrato Dólares</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Fecha de firma</label>
+              <input id="signDate" type="date" value="">
+            </div>
+            <div class="field full">
+              <label>Nombre del cliente</label>
+              <input id="clientName" type="text" value="MENITA COMERCIAL OCEANICA SA DE CV">
+            </div>
+            <div class="field">
+              <label>Número de contrato</label>
+              <input id="contractNumber" type="text" value="S-000000000000453">
+            </div>
+            <div class="field">
+              <label>Moneda / Leyenda</label>
+              <select id="currencyCode">
+                <option value="MXN" selected>M.N.</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Línea autorizada</label>
+              <input id="creditLine" type="number" step="0.01" value="300000">
+            </div>
+            <div class="field">
+              <label>Cuántos tipos de condiciones tiene</label>
+              <input id="conditionCount" type="number" min="1" value="2">
+            </div>
+          </div>
+          <p class="hint">La línea autorizada se imprime en formato monetario y también en texto. Si necesitas otro wording, puedes editar el HTML manualmente después.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><h2>Lógica del cálculo</h2></div>
+        <div class="panel-body">
+          <p class="muted">La calculadora ya no parte de un CAT fijo. Primero pide tasas y días; con eso puebla la columna CAT en cada condición.</p>
+          <div class="formula-card">
+            <h3>Fórmula aplicada</h3>
+            <p class="formula">CAT = (Costo acumulado sin IVA × 360) / Días al pago</p>
+            <p class="muted" style="margin-top:0">Ejemplo del contrato base: 1.90% × 360 / 30 = 22.80%. Para 45 días, el costo acumulado sube a 2.00%, por lo que CAT = 16.00%.</p>
+          </div>
+          <ul class="logic-list">
+            <li><strong>Qué debes capturar en cada condición:</strong></li>
+            <li>1) nombre de la condición,</li>
+            <li>2) comisión base sin IVA,</li>
+            <li>3) tramos ordinarios con día inicial, día final y tasa sin IVA,</li>
+            <li>4) moratorio diario si deseas que aparezca en el texto contractual.</li>
+            <li style="margin-top:12px">El sistema toma cada <em>día final</em> como escenario de pago completo y calcula el CAT anualizado sobre base 360.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="conditions-wrap no-print" id="conditionsWrap"></div>
+
+    <div class="preview-wrap">
+      <div class="preview-title no-print">Vista contractual</div>
+      <div id="previewPages"></div>
+    </div>
+  </div>
+
+<script>
+const defaultConditions = [
+  {
+    name: 'Gross Payment',
+    commission: 1.90,
+    creditDays: 365,
+    limitDays: 60,
+    moratory: 0.1167,
+    tramos: [
+      {label:'ORDINARIO A-1', start:1, end:30, rate:0.00, mode:'fixed'},
+      {label:'ORDINARIO A-2', start:31, end:45, rate:0.10, mode:'fixed'},
+      {label:'ORDINARIO A-3', start:46, end:60, rate:0.63, mode:'fixed'}
+    ]
+  },
+  {
+    name: 'Supplier Funded',
+    commission: 0.00,
+    creditDays: 365,
+    limitDays: 60,
+    moratory: 0.1167,
+    tramos: [
+      {label:'ORDINARIO A-1', start:1, end:20, rate:0.00, mode:'fixed'},
+      {label:'ORDINARIO A-2', start:21, end:30, rate:0.10, mode:'fixed'},
+      {label:'ORDINARIO A-3', start:31, end:45, rate:0.85, mode:'fixed'},
+      {label:'ORDINARIO A-4', start:46, end:60, rate:1.05, mode:'fixed'}
+    ]
+  }
+];
+
+function formatPct(n){ return `${Number(n).toFixed(2)}%`; }
+function formatPct4(n){ return `${Number(n).toFixed(4)}%`; }
+function moneyFmt(amount,currency){
+  const code = currency === 'USD' ? 'USD' : 'MXN';
+  return new Intl.NumberFormat('es-MX',{style:'currency',currency:code,minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(amount||0));
+}
+function formatDateLong(value){
+  if(!value) return 'Pendiente';
+  const [y,m,d] = value.split('-').map(Number);
+  if(!y||!m||!d) return value;
+  return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+}
+function toWordsES(num, currency){
+  num = Math.floor(Number(num||0));
+  if (num === 0) return currency==='USD' ? 'Cero dólares' : 'Cero pesos';
+  const units = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+  const teens = ['diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve'];
+  const tens = ['','','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+  const hundreds = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+  function underHundred(n){
+    if(n < 10) return units[n];
+    if(n < 20) return teens[n-10];
+    if(n === 20) return 'veinte';
+    if(n < 30) return 'veinti' + units[n-20];
+    const t = Math.floor(n/10), u = n%10;
+    return u ? `${tens[t]} y ${units[u]}` : tens[t];
+  }
+  function underThousand(n){
+    if(n === 100) return 'cien';
+    const h = Math.floor(n/100), rest = n%100;
+    let out = h ? hundreds[h] : '';
+    if(rest) out += (out ? ' ' : '') + underHundred(rest);
+    return out;
+  }
+  function section(n, singular, plural){
+    if(n === 0) return '';
+    if(n === 1) return singular;
+    if(n < 1000) return `${underThousand(n)} ${plural}`;
+    const mil = Math.floor(n/1000), rest = n%1000;
+    let prefix = mil === 1 ? 'mil' : `${underThousand(mil)} mil`;
+    if(rest) prefix += ` ${underThousand(rest)}`;
+    return `${prefix} ${plural}`;
+  }
+  let text = '';
+  const millions = Math.floor(num/1000000);
+  const thousands = Math.floor((num%1000000)/1000);
+  const rest = num%1000;
+  if(millions){ text += millions === 1 ? 'un millón' : `${section(millions,'un millón','millones')}`; }
+  if(thousands){ text += (text ? ' ' : '') + (thousands === 1 ? 'mil' : `${underThousand(thousands)} mil`); }
+  if(rest){ text += (text ? ' ' : '') + underThousand(rest); }
+  text = text.replace(/uno dólares/i,'un dólares').replace(/uno pesos/i,'un pesos');
+  return (text.charAt(0).toUpperCase() + text.slice(1)) + (currency==='USD' ? ' dólares' : ' pesos');
+}
+function currencyLegend(currency){ return currency === 'USD' ? 'USD' : 'MXN'; }
+function currencyTextTail(currency){ return currency === 'USD' ? 'moneda de curso legal de los Estados Unidos de América 00/100 USD' : '00/100 M.N.'; }
+
+function tramoCost(tramo){
+  const rate = Number(tramo.rate||0);
+  if(tramo.mode === 'daily'){
+    const days = Math.max(0, Number(tramo.end||0) - Number(tramo.start||0) + 1);
+    return rate * days;
+  }
+  return rate;
+}
+function scenarioCats(condition){
+  const tramos = [...condition.tramos].sort((a,b)=>Number(a.end)-Number(b.end));
+  let cumulative = Number(condition.commission||0);
+  return tramos.map(t=>{
+    cumulative += tramoCost(t);
+    const end = Number(t.end||0);
+    const cat = end > 0 ? (cumulative * 360) / end : 0;
+    return {end, cat, cumulative};
+  });
+}
+
+function conditionTemplate(index, data){
+  const wrap = document.createElement('section');
+  wrap.className = 'condition-card';
+  wrap.dataset.index = index;
+  wrap.innerHTML = `
+    <div class="condition-head">
+      <h3>Condición ${index + 1}</h3>
+      <div class="head-actions">
+        <button class="small-btn add-tramo" type="button">Agregar tramo</button>
+        <button class="small-btn danger remove-condition" type="button">Eliminar condición</button>
+      </div>
+    </div>
+    <div class="condition-body">
+      <div class="condition-grid">
+        <div class="field">
+          <label>Nombre de la condición</label>
+          <input class="cond-name" type="text" value="${data.name || ''}">
+        </div>
+        <div class="field">
+          <label>Comisión base sin IVA (%)</label>
+          <input class="cond-commission" type="number" step="0.0001" value="${Number(data.commission||0).toFixed(4)}">
+        </div>
+        <div class="field">
+          <label>Plazo del crédito (días)</label>
+          <input class="cond-credit-days" type="number" step="1" value="${Number(data.creditDays||365)}">
+        </div>
+        <div class="field">
+          <label>Plazo límite por disposición (días)</label>
+          <input class="cond-limit-days" type="number" step="1" value="${Number(data.limitDays||60)}">
+        </div>
+        <div class="field">
+          <label>Moratorio diario (%)</label>
+          <input class="cond-moratory" type="number" step="0.0001" value="${Number(data.moratory||0).toFixed(4)}">
+        </div>
+      </div>
+      <div class="tramos">
+        <table class="tramo-table">
+          <thead>
+            <tr>
+              <th style="width:24%">Etiqueta del tramo</th>
+              <th style="width:12%">Día inicial</th>
+              <th style="width:12%">Día final</th>
+              <th style="width:14%">Tipo</th>
+              <th style="width:18%">Tasa sin IVA (%)</th>
+              <th>Impacto para CAT</th>
+              <th style="width:72px"></th>
+            </tr>
+          </thead>
+          <tbody class="tramo-body"></tbody>
+        </table>
+      </div>
+      <div class="calc-summary">
+        <h4>Escenarios CAT calculados</h4>
+        <div class="chips scenario-chips"></div>
+      </div>
+    </div>`;
+
+  const tbody = wrap.querySelector('.tramo-body');
+  (data.tramos || []).forEach(tr => tbody.appendChild(tramoRow(tr)));
+  wrap.querySelector('.add-tramo').addEventListener('click', ()=>{
+    tbody.appendChild(tramoRow({label:`ORDINARIO ${String.fromCharCode(65 + tbody.children.length)}-1`, start:1, end:30, rate:0, mode:'fixed'}));
+    updateScenarioChips(wrap);
+  });
+  wrap.querySelector('.remove-condition').addEventListener('click', ()=>{
+    if(document.querySelectorAll('.condition-card').length <= 1) return;
+    wrap.remove();
+    reindexConditions();
+    renderPreview();
+  });
+  wrap.addEventListener('input', ()=>updateScenarioChips(wrap));
+  wrap.addEventListener('change', ()=>updateScenarioChips(wrap));
+  updateScenarioChips(wrap);
+  return wrap;
+}
+
+function tramoRow(data){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="tr-label" type="text" value="${data.label || ''}"></td>
+    <td><input class="tr-start" type="number" step="1" value="${Number(data.start||1)}"></td>
+    <td><input class="tr-end" type="number" step="1" value="${Number(data.end||30)}"></td>
+    <td>
+      <select class="tr-mode">
+        <option value="fixed" ${data.mode === 'fixed' ? 'selected':''}>Fija</option>
+        <option value="daily" ${data.mode === 'daily' ? 'selected':''}>Diaria</option>
+      </select>
+    </td>
+    <td><input class="tr-rate" type="number" step="0.0001" value="${Number(data.rate||0).toFixed(4)}"></td>
+    <td class="impact-cell"></td>
+    <td class="action-cell"><button class="small-btn danger delete-tramo" type="button">X</button></td>
+  `;
+  tr.querySelector('.delete-tramo').addEventListener('click', ()=>{
+    const tbody = tr.parentElement;
+    if(tbody.children.length <= 1) return;
+    tr.remove();
+    const card = tbody.closest('.condition-card');
+    updateScenarioChips(card);
+  });
+  const updateImpact = ()=>{
+    const mode = tr.querySelector('.tr-mode').value;
+    const rate = Number(tr.querySelector('.tr-rate').value||0);
+    const start = Number(tr.querySelector('.tr-start').value||0);
+    const end = Number(tr.querySelector('.tr-end').value||0);
+    const days = Math.max(0,end-start+1);
+    tr.querySelector('.impact-cell').textContent = mode === 'daily'
+      ? `Para CAT suma ${formatPct(rate * days)} si se paga al cierre del tramo.`
+      : `Para CAT suma ${formatPct(rate)} al llegar al día final.`;
+  };
+  tr.addEventListener('input', updateImpact);
+  tr.addEventListener('change', updateImpact);
+  updateImpact();
+  return tr;
+}
+
+function readCondition(card){
+  const tramos = [...card.querySelectorAll('.tramo-body tr')].map(tr=>({
+    label: tr.querySelector('.tr-label').value.trim() || 'ORDINARIO',
+    start: Number(tr.querySelector('.tr-start').value||0),
+    end: Number(tr.querySelector('.tr-end').value||0),
+    rate: Number(tr.querySelector('.tr-rate').value||0),
+    mode: tr.querySelector('.tr-mode').value
+  }));
+  return {
+    name: card.querySelector('.cond-name').value.trim() || 'Condición',
+    commission: Number(card.querySelector('.cond-commission').value||0),
+    creditDays: Number(card.querySelector('.cond-credit-days').value||365),
+    limitDays: Number(card.querySelector('.cond-limit-days').value||60),
+    moratory: Number(card.querySelector('.cond-moratory').value||0),
+    tramos
+  };
+}
+
+function updateScenarioChips(card){
+  const data = readCondition(card);
+  const scenarios = scenarioCats(data);
+  const chips = card.querySelector('.scenario-chips');
+  chips.innerHTML = scenarios.map(s=>`<span class="chip">${s.end} días · CAT ${formatPct(s.cat)}</span>`).join('');
+  renderPreview();
+}
+
+function syncConditionCount(){
+  const wrap = document.getElementById('conditionsWrap');
+  const desired = Math.max(1, Number(document.getElementById('conditionCount').value || 1));
+  let current = wrap.querySelectorAll('.condition-card').length;
+  while(current < desired){
+    const base = defaultConditions[current] || {name:`Condición ${current+1}`, commission:0, creditDays:365, limitDays:60, moratory:0.1167, tramos:[{label:'ORDINARIO A-1', start:1, end:30, rate:0, mode:'fixed'}]};
+    wrap.appendChild(conditionTemplate(current, JSON.parse(JSON.stringify(base))));
+    current++;
+  }
+  while(current > desired){
+    wrap.lastElementChild.remove();
+    current--;
+  }
+  reindexConditions();
+}
+
+function reindexConditions(){
+  const cards = [...document.querySelectorAll('.condition-card')];
+  cards.forEach((card, idx)=>{
+    card.dataset.index = idx;
+    card.querySelector('.condition-head h3').textContent = `Condición ${idx + 1}`;
+  });
+  document.getElementById('conditionCount').value = cards.length;
+}
+
+function collectData(){
+  return {
+    contractType: document.getElementById('contractType').value,
+    signDate: document.getElementById('signDate').value,
+    clientName: document.getElementById('clientName').value.trim(),
+    contractNumber: document.getElementById('contractNumber').value.trim(),
+    currencyCode: document.getElementById('currencyCode').value,
+    creditLine: Number(document.getElementById('creditLine').value || 0),
+    conditions: [...document.querySelectorAll('.condition-card')].map(readCondition)
+  };
+}
+
+function tramoDescription(tramo){
+  const s = Number(tramo.start||0), e = Number(tramo.end||0), r = Number(tramo.rate||0);
+  if(tramo.mode === 'daily'){
+    const eq = r * Math.max(0,e-s+1);
+    return `${tramo.label} - De los días ${s} a ${e}: tasa diaria de ${formatPct4(r)} (equivalente al ${formatPct(eq)}) + IVA sobre saldo insoluto.`;
+  }
+  return `${tramo.label} - De los días ${s} a ${e}: porcentaje fijo del ${formatPct4(r)} + IVA sobre el total de la disposición.`;
+}
+
+function buildPreviewPage(data){
+  const code = data.currencyCode;
+  const amountText = `${moneyFmt(data.creditLine, code)} ${currencyLegend(code)}`;
+  const amountWords = `${toWordsES(data.creditLine, code)} ${currencyTextTail(code)}`;
+  const fullAmount = `${amountText} (${amountWords}).`;
+
+  const condBlocks = data.conditions.map((cond, i)=>{
+    const scenarios = scenarioCats(cond);
+    const tramoRows = cond.tramos.map(tr=>tramoDescription(tr));
+    const moratoryRow = `MORATORIO - A partir del día ${Number(cond.limitDays) + 1}: tasa diaria de ${formatPct4(cond.moratory)} + IVA sobre el saldo insoluto.`;
+    const allRows = [...tramoRows, moratoryRow];
+    const rowSpan = allRows.length || 1;
+
+    const conditionTitle = Number(cond.commission || 0) > 0
+      ? `${i + 1}. Condiciones ${escapeHtml(cond.name)}, comisión ${Number(cond.commission).toFixed(2)}% + IVA`
+      : `${i + 1}. Condiciones ${escapeHtml(cond.name)}`;
+
+    const catCell = `
+      <td rowspan="${rowSpan}" class="cat-cell">
+        <ul class="cat-list">
+          ${scenarios.map(s=>`<li>Pago completo de cada operación a los ${s.end} días: <strong>${formatPct(s.cat)}</strong> (Costo Anual Total)</li>`).join('')}
+        </ul>
+        <p class="legend">Valor expresado en términos porcentuales anuales, de acuerdo con la metodología del Banco de México.<br>SIN IVA PARA FINES INFORMATIVOS Y DE COMPARACIÓN</p>
+      </td>`;
+
+    const amountCell = `<td rowspan="${rowSpan}" class="amount-cell">Línea revolvente hasta por: ${amountText}<br>(${amountWords}).</td>`;
+    const payCell = `<td rowspan="${rowSpan}" class="pay-cell">Variable según la fecha de pago.<br><br>*Monto Total a Pagar es la cantidad estimada a pagar para liquidar “EL CRÉDITO” incluyendo los accesorios (intereses, comisiones, seguros y cualquier otro gasto a su cargo).<br><br>*Mínimo a Pagar es, para el caso de tarjeta de crédito, la cantidad en términos porcentuales que “EL ACREDITADO” deberá cubrir para no caer en morosidad, conforme a la metodología de cálculo establecida en “EL CONTRATO”.</td>`;
+
+    const tableRows = allRows.map((row, idx)=>{
+      if(idx === 0){
+        return `<tr>${catCell}<td>${row}</td>${amountCell}${payCell}</tr>`;
+      }
+      return `<tr><td>${row}</td></tr>`;
+    }).join('');
+
+    return `
+      <div class="cond-block">
+        <p class="cond-name">${conditionTitle}</p>
+        <table class="contract-main-table">
+          <colgroup>
+            <col style="width:25%">
+            <col style="width:17%">
+            <col style="width:17%">
+            <col style="width:41%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>CAT</th>
+              <th>TASA DE INTERÉS</th>
+              <th>MONTO DEL CRÉDITO</th>
+              <th>MONTO TOTAL A PAGAR O MÍNIMO A PAGAR</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+        <table class="classic-info-strip">
+          <colgroup>
+            <col style="width:46%">
+            <col style="width:24%">
+            <col style="width:30%">
+          </colgroup>
+          <tr>
+            <td><strong>PLAZO DEL CRÉDITO:</strong> ${cond.creditDays} días naturales<br><br><strong>PLAZO LÍMITE DE PAGO POR CADA DISPOSICIÓN:</strong> hasta ${cond.limitDays} días naturales</td>
+            <td><strong>NÚMERO DE PAGOS:</strong> Indefinido</td>
+            <td><strong>MEDIO DE DISPOSICIÓN:</strong> Tarjeta</td>
+          </tr>
+        </table>
+      </div>`;
+  }).join('');
+
+  return `
+    <section class="doc-sheet">
+      <h1 class="doc-title">• ${escapeHtml(data.contractType)}</h1>
+      <div class="contract-lines">
+        <p><span class="label">a. Nombre del Cliente:</span> ${escapeHtml(data.clientName || 'Pendiente')}</p>
+        <p><span class="label">b. Número de Contrato:</span> ${escapeHtml(data.contractNumber || 'Pendiente')}</p>
+        <p><span class="label">c. Fecha de Firma:</span> ${escapeHtml(formatDateLong(data.signDate))}</p>
+        <p><span class="label">d. Línea Autorizada:</span> ${fullAmount}</p>
+        <p><span class="label">e. Condiciones Financieras:</span></p>
+      </div>
+      ${condBlocks}
+    </section>`;
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function renderPreview(){
+  const data = collectData();
+  document.getElementById('previewPages').innerHTML = buildPreviewPage(data);
+}
+
+
+function safeFileName(value){
+  return String(value || 'contrato')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zA-Z0-9_-]+/g,'_')
+    .replace(/^_+|_+$/g,'')
+    .slice(0,80) || 'contrato';
+}
+
+function buildWordStyles(){
+  return `
+    @page WordSection1 { size: 21cm 29.7cm; margin: 1.4cm 1.2cm 1.2cm 1.2cm; }
+    div.WordSection1 { page: WordSection1; }
+    body { font-family: "Times New Roman", Georgia, serif; color:#111111; background:#ffffff; }
+    .doc-sheet { width: auto; min-height: auto; margin:0; padding:0; border:none; box-shadow:none; font-family:"Times New Roman", Georgia, serif; color:#111111; }
+    .doc-title { font-family:"Times New Roman", Georgia, serif; font-size:26px; font-weight:700; color:#2d5774; margin:0 0 14px 0; line-height:1.15; }
+    .contract-lines p { margin:0 0 8px 0; font-size:12.8pt; line-height:1.45; }
+    .contract-lines .label { font-weight:700; }
+    .cond-block { margin-top:16px; padding-top:6px; page-break-inside:avoid; }
+    .cond-name { font-family:Arial, Helvetica, sans-serif; font-size:17px; font-weight:700; color:#111111; margin:0 0 10px 0; }
+    table { border-collapse:collapse; table-layout:fixed; width:100%; }
+    .contract-main-table, .classic-info-strip { width:100%; border-collapse:collapse; table-layout:fixed; margin-top:8px; }
+    .contract-main-table th, .contract-main-table td, .classic-info-strip td { border:1px solid #6a808f; padding:8px 9px; vertical-align:top; }
+    .contract-main-table th { background:#edf4f6; color:#173246; font-family:Arial, Helvetica, sans-serif; font-size:11.2pt; text-transform:uppercase; letter-spacing:.02em; text-align:left; }
+    .contract-main-table td { font-size:11.3pt; line-height:1.25; }
+    .contract-main-table .cat-cell { font-style:italic; }
+    .contract-main-table .amount-cell, .contract-main-table .pay-cell { font-style:normal; }
+    .cat-list { margin:0; padding-left:16px; }
+    .cat-list li { margin:0 0 8px 0; line-height:1.3; }
+    .legend { font-size:10.9pt; line-height:1.3; color:#111111; margin:10px 0 0 0; font-style:normal; }
+    .classic-info-strip { margin-top:0; }
+    .classic-info-strip td { font-size:11pt; line-height:1.3; }
+    .classic-info-strip strong { font-family:Arial, Helvetica, sans-serif; }
+  `;
+}
+
+function buildWordDocument(){
+  renderPreview();
+  const previewHtml = document.getElementById('previewPages').innerHTML;
+  const styles = buildWordStyles();
+  return `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="UTF-8">
+  <meta name="ProgId" content="Word.Document">
+  <meta name="Generator" content="KEO Contract Calculator">
+  <meta name="Originator" content="KEO Contract Calculator">
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>${styles}</style>
+</head>
+<body>
+  <div class="WordSection1">
+    ${previewHtml}
+  </div>
+</body>
+</html>`;
+}
+
+function downloadWord(){
+  const data = collectData();
+  const fileBase = safeFileName(`${data.contractNumber || 'contrato'}_${data.clientName || 'cliente'}`);
+  const wordHtml = '\ufeff' + buildWordDocument();
+  const blob = new Blob([wordHtml], { type: 'application/msword;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${fileBase}.doc`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  syncConditionCount();
+  renderPreview();
+});
+document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+document.getElementById('wordBtn').addEventListener('click', downloadWord);
+document.getElementById('conditionCount').addEventListener('change', ()=>{ syncConditionCount(); renderPreview(); });
+['contractType','signDate','clientName','contractNumber','currencyCode','creditLine'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderPreview);
+  document.getElementById(id).addEventListener('change', renderPreview);
+});
+
+syncConditionCount();
+renderPreview();
+</script>
+</body>
+</html>
